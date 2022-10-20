@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mevolve/app_colors.dart';
 
 class CancelButton extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -12,8 +13,8 @@ class CancelButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xffEDF8FF),
-        foregroundColor: const Color(0xff1DA1F2),
+        backgroundColor: AppColors.lightBlue,
+        foregroundColor: AppColors.darkBlue,
       ),
       child: child,
     );

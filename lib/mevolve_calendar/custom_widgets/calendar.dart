@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:mevolve/app_colors.dart';
 import 'package:mevolve/mevolve_calendar/date_picker_controller.dart';
 import 'package:provider/provider.dart';
 
@@ -18,8 +19,8 @@ class _CalenderWidgetState extends State<CalenderWidget> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final datePickerController = Provider.of<DatePickerController>(context);
-    _pageController =
-        PageController(initialPage: datePickerController.getInitialPageIndex());
+    _pageController = PageController(
+        initialPage: datePickerController.getSelectedDatePageIndex());
   }
 
   @override
@@ -31,6 +32,7 @@ class _CalenderWidgetState extends State<CalenderWidget> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             InkWell(
+              borderRadius: BorderRadius.circular(25),
               onTap: () {
                 datePickerController.currentPageIndex.value--;
                 _pageController.previousPage(
@@ -40,15 +42,18 @@ class _CalenderWidgetState extends State<CalenderWidget> {
               child: const Icon(
                 Icons.arrow_left_rounded,
                 color: Colors.grey,
+                size: 35,
               ),
             ),
             ValueListenableBuilder(
                 valueListenable: datePickerController.currentPageIndex,
-                builder: (context, value, child) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                builder: (context, value, child) => Container(
+                      //So that Icons should not move from their position
+                      constraints: BoxConstraints(minWidth: 140.w),
                       child: Text(
                         DateFormat.yMMMM()
                             .format(datePickerController.currentIndexMonthDate),
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 18.sp,
@@ -56,6 +61,7 @@ class _CalenderWidgetState extends State<CalenderWidget> {
                       ),
                     )),
             InkWell(
+              borderRadius: BorderRadius.circular(25),
               onTap: () {
                 datePickerController.currentPageIndex.value++;
                 _pageController.nextPage(
@@ -65,6 +71,7 @@ class _CalenderWidgetState extends State<CalenderWidget> {
               child: const Icon(
                 Icons.arrow_right_rounded,
                 color: Colors.grey,
+                size: 35,
               ),
             ),
           ],
@@ -99,35 +106,39 @@ class _DateViewWidget extends StatelessWidget {
     final startDate =
         monthStartDate.subtract(Duration(days: monthStartDate.weekday));
     final endDate = monthEndDate.add(Duration(days: 7 - monthEndDate.weekday));
-    return GridView.builder(
-      padding: const EdgeInsets.all(0),
-      itemCount: endDate.difference(startDate).inDays + 7,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 7,
-      ),
-      itemBuilder: (context, index) {
-        if (index < 7) return _getHeaderWidget(index);
-        final date = startDate.add(Duration(days: (index - 7)));
-        if ((date.isAfter(monthStartDate) ||
-                date.isAtSameMomentAs(monthStartDate)) &&
-            (date.isBefore(monthEndDate) ||
-                date.isAtSameMomentAs(monthEndDate))) {
-          if (date.isAtSameMomentAs(datePickerController.selectedDate)) {
+    return ValueListenableBuilder(
+      valueListenable: datePickerController.selectedDate,
+      builder: (context, value, child) => GridView.builder(
+        padding: const EdgeInsets.all(0),
+        itemCount: endDate.difference(startDate).inDays + 7,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 7,
+        ),
+        itemBuilder: (context, index) {
+          if (index < 7) return _getHeaderWidget(index);
+          final date = startDate.add(Duration(days: (index - 7)));
+          if ((date.isAfter(monthStartDate) ||
+                  date.isAtSameMomentAs(monthStartDate)) &&
+              (date.isBefore(monthEndDate) ||
+                  date.isAtSameMomentAs(monthEndDate))) {
+            if (date
+                .isAtSameMomentAs(datePickerController.selectedDate.value)) {
+              return _DateTextWidget(
+                date,
+                isSelected: true,
+              );
+            } else {
+              return _DateTextWidget(date);
+            }
+          } else {
             return _DateTextWidget(
               date,
-              isSelected: true,
+              isCurrentMonthDate: false,
             );
-          } else {
-            return _DateTextWidget(date);
           }
-        } else {
-          return _DateTextWidget(
-            date,
-            isCurrentMonthDate: false,
-          );
-        }
-      },
+        },
+      ),
     );
   }
 
@@ -167,13 +178,15 @@ class _DateTextWidget extends StatelessWidget {
     final datePickerController = Provider.of<DatePickerController>(context);
     return InkWell(
       onTap: () {
-        datePickerController.selectedDate = dateToShow;
+        datePickerController.selectedDate.value = dateToShow;
       },
       borderRadius: BorderRadius.circular(25),
       child: isSelected
           ? Container(
-              decoration: const BoxDecoration(
-                  shape: BoxShape.circle, color: Colors.blue),
+              width: 28.w,
+              height: 28.w,
+              decoration: BoxDecoration(
+                  shape: BoxShape.circle, color: AppColors.darkBlue),
               child: Center(
                   child: Text(
                 dateToShow.day.toString(),
@@ -200,7 +213,6 @@ class _DayNameWidget extends StatelessWidget {
     return Center(
         child: Text(
       dayName,
-      style: TextStyle(fontWeight: FontWeight.w400),
     ));
   }
 }
