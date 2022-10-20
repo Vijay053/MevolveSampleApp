@@ -21,6 +21,9 @@ class _CalenderWidgetState extends State<CalenderWidget> {
     final datePickerController = Provider.of<DatePickerController>(context);
     _pageController = PageController(
         initialPage: datePickerController.getSelectedDatePageIndex());
+    datePickerController.currentPageIndex.addListener(() {
+      _pageController.jumpToPage(datePickerController.currentPageIndex.value);
+    });
   }
 
   @override
@@ -34,7 +37,6 @@ class _CalenderWidgetState extends State<CalenderWidget> {
             InkWell(
               borderRadius: BorderRadius.circular(25),
               onTap: () {
-                datePickerController.currentPageIndex.value--;
                 _pageController.previousPage(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.bounceInOut);
@@ -63,7 +65,6 @@ class _CalenderWidgetState extends State<CalenderWidget> {
             InkWell(
               borderRadius: BorderRadius.circular(25),
               onTap: () {
-                datePickerController.currentPageIndex.value++;
                 _pageController.nextPage(
                     duration: const Duration(milliseconds: 200),
                     curve: Curves.bounceInOut);
@@ -84,7 +85,7 @@ class _CalenderWidgetState extends State<CalenderWidget> {
                 datePickerController.currentPageIndex.value = index;
               },
               itemBuilder: (context, index) {
-                return const _DateViewWidget();
+                return _DateViewWidget(index);
               },
             )),
       ],
@@ -93,18 +94,20 @@ class _CalenderWidgetState extends State<CalenderWidget> {
 }
 
 class _DateViewWidget extends StatelessWidget {
-  const _DateViewWidget({Key? key}) : super(key: key);
+  final int index;
+
+  const _DateViewWidget(this.index, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final datePickerController = Provider.of<DatePickerController>(context);
-    final monthToShowDate = datePickerController.currentIndexMonthDate;
+    final monthToShowDate = datePickerController.getDateFromIndex(index);
     final monthStartDate =
         DateTime(monthToShowDate.year, monthToShowDate.month, 1);
     final monthEndDate =
         DateTime(monthToShowDate.year, monthToShowDate.month + 1, 0);
-    final startDate =
-        monthStartDate.subtract(Duration(days: monthStartDate.weekday));
+    final startDate = monthStartDate
+        .subtract(Duration(days: monthStartDate.weekday.remainder(7)));
     final endDate = monthEndDate.add(Duration(days: 7 - monthEndDate.weekday));
     return ValueListenableBuilder(
       valueListenable: datePickerController.selectedDate,

@@ -9,8 +9,12 @@ class DatePickerController {
   ValueNotifier<int?> selectedPreset = ValueNotifier(null);
 
   DateTime get currentIndexMonthDate {
-    return DateTime(startDate.year + currentPageIndex.value ~/ 12,
-        (startDate.month - 1) + (currentPageIndex.value.remainder(12)), 1);
+    return getDateFromIndex(currentPageIndex.value);
+  }
+
+  DateTime getDateFromIndex(int index) {
+    return DateTime(startDate.year + index ~/ 12,
+        (startDate.month - 1) + (index.remainder(12)), 1);
   }
 
   int getSelectedDatePageIndex() {
