@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:mevolve/mevolve_calendar/date_picker_controller.dart';
 import 'package:provider/provider.dart';
@@ -11,39 +12,6 @@ class CalenderWidget extends StatefulWidget {
 }
 
 class _CalenderWidgetState extends State<CalenderWidget> {
-  @override
-  Widget build(BuildContext context) {
-    final datePickerController = Provider.of<DatePickerController>(context);
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.arrow_left_rounded,
-              color: Colors.grey,
-            ),
-            Text(DateFormat.yMMMM().format(datePickerController.selectedDate)),
-            const Icon(
-              Icons.arrow_right_rounded,
-              color: Colors.grey,
-            ),
-          ],
-        ),
-        const _SwipeableCalendar(),
-      ],
-    );
-  }
-}
-
-class _SwipeableCalendar extends StatefulWidget {
-  const _SwipeableCalendar({Key? key}) : super(key: key);
-
-  @override
-  State<_SwipeableCalendar> createState() => _SwipeableCalendarState();
-}
-
-class _SwipeableCalendarState extends State<_SwipeableCalendar> {
   late PageController _pageController;
 
   @override
@@ -56,35 +24,63 @@ class _SwipeableCalendarState extends State<_SwipeableCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    print(_pageController.initialPage);
-    return SizedBox(
-      height: 500,
-      child: PageView.builder(
-        controller: _pageController,
-        onPageChanged: (index) {
-          print(index);
-          setState(() {});
-        },
-        itemBuilder: (context, index) {
-          return Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: const [
-                  _DayNameWidget('Sun'),
-                  _DayNameWidget('Mon'),
-                  _DayNameWidget('Tue'),
-                  _DayNameWidget('Wed'),
-                  _DayNameWidget('Thu'),
-                  _DayNameWidget('Fri'),
-                  _DayNameWidget('Sat'),
-                ],
+    final datePickerController = Provider.of<DatePickerController>(context);
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            InkWell(
+              onTap: () {
+                datePickerController.currentPageIndex.value--;
+                _pageController.previousPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.bounceInOut);
+              },
+              child: const Icon(
+                Icons.arrow_left_rounded,
+                color: Colors.grey,
               ),
-              const _DateViewWidget(),
-            ],
-          );
-        },
-      ),
+            ),
+            ValueListenableBuilder(
+                valueListenable: datePickerController.currentPageIndex,
+                builder: (context, value, child) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        DateFormat.yMMMM()
+                            .format(datePickerController.currentIndexMonthDate),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 18.sp,
+                        ),
+                      ),
+                    )),
+            InkWell(
+              onTap: () {
+                datePickerController.currentPageIndex.value++;
+                _pageController.nextPage(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.bounceInOut);
+              },
+              child: const Icon(
+                Icons.arrow_right_rounded,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(
+            height: 340,
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                datePickerController.currentPageIndex.value = index;
+              },
+              itemBuilder: (context, index) {
+                return const _DateViewWidget();
+              },
+            )),
+      ],
     );
   }
 }
@@ -95,39 +91,65 @@ class _DateViewWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final datePickerController = Provider.of<DatePickerController>(context);
-    final selectedDate = datePickerController.selectedDate;
-    final monthStartDate = DateTime(selectedDate.year, selectedDate.month, 1);
-    final monthEndDate = DateTime(selectedDate.year, selectedDate.month + 1, 0);
+    final monthToShowDate = datePickerController.currentIndexMonthDate;
+    final monthStartDate =
+        DateTime(monthToShowDate.year, monthToShowDate.month, 1);
+    final monthEndDate =
+        DateTime(monthToShowDate.year, monthToShowDate.month + 1, 0);
     final startDate =
         monthStartDate.subtract(Duration(days: monthStartDate.weekday));
-    return Expanded(
-      child: GridView.builder(
-        itemCount: 42,
-        gridDelegate:
-            const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7),
-        itemBuilder: (context, index) {
-          final date = startDate.add(Duration(days: index));
-          if ((date.isAfter(monthStartDate) ||
-                  date.isAtSameMomentAs(monthStartDate)) &&
-              (date.isBefore(monthEndDate) ||
-                  date.isAtSameMomentAs(monthEndDate))) {
-            if (date.isAtSameMomentAs(selectedDate)) {
-              return _DateTextWidget(
-                date,
-                isSelected: true,
-              );
-            } else {
-              return _DateTextWidget(date);
-            }
-          } else {
+    final endDate = monthEndDate.add(Duration(days: 7 - monthEndDate.weekday));
+    return GridView.builder(
+      padding: const EdgeInsets.all(0),
+      itemCount: endDate.difference(startDate).inDays + 7,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 7,
+      ),
+      itemBuilder: (context, index) {
+        if (index < 7) return _getHeaderWidget(index);
+        final date = startDate.add(Duration(days: (index - 7)));
+        if ((date.isAfter(monthStartDate) ||
+                date.isAtSameMomentAs(monthStartDate)) &&
+            (date.isBefore(monthEndDate) ||
+                date.isAtSameMomentAs(monthEndDate))) {
+          if (date.isAtSameMomentAs(datePickerController.selectedDate)) {
             return _DateTextWidget(
               date,
-              isCurrentMonthDate: false,
+              isSelected: true,
             );
+          } else {
+            return _DateTextWidget(date);
           }
-        },
-      ),
+        } else {
+          return _DateTextWidget(
+            date,
+            isCurrentMonthDate: false,
+          );
+        }
+      },
     );
+  }
+
+  Widget _getHeaderWidget(int index) {
+    switch (index) {
+      case 0:
+        return const _DayNameWidget('Sun');
+      case 1:
+        return const _DayNameWidget('Mon');
+      case 2:
+        return const _DayNameWidget('Tue');
+      case 3:
+        return const _DayNameWidget('Wed');
+      case 4:
+        return const _DayNameWidget('Thu');
+      case 5:
+        return const _DayNameWidget('Fri');
+      case 6:
+        return const _DayNameWidget('Sat');
+      default:
+        return Container();
+    }
   }
 }
 
@@ -142,24 +164,29 @@ class _DateTextWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isSelected) {
-      return Container(
-        decoration:
-            const BoxDecoration(shape: BoxShape.circle, color: Colors.blue),
-        child: Center(
-            child: Text(
-          dateToShow.day.toString(),
-          style: const TextStyle(color: Colors.white),
-        )),
-      );
-    } else {
-      return Center(
-          child: Text(
-        dateToShow.day.toString(),
-        style:
-            TextStyle(color: isCurrentMonthDate ? Colors.black : Colors.grey),
-      ));
-    }
+    final datePickerController = Provider.of<DatePickerController>(context);
+    return InkWell(
+      onTap: () {
+        datePickerController.selectedDate = dateToShow;
+      },
+      borderRadius: BorderRadius.circular(25),
+      child: isSelected
+          ? Container(
+              decoration: const BoxDecoration(
+                  shape: BoxShape.circle, color: Colors.blue),
+              child: Center(
+                  child: Text(
+                dateToShow.day.toString(),
+                style: const TextStyle(color: Colors.white),
+              )),
+            )
+          : Center(
+              child: Text(
+              dateToShow.day.toString(),
+              style: TextStyle(
+                  color: isCurrentMonthDate ? Colors.black : Colors.grey),
+            )),
+    );
   }
 }
 
@@ -170,6 +197,10 @@ class _DayNameWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text(dayName));
+    return Center(
+        child: Text(
+      dayName,
+      style: TextStyle(fontWeight: FontWeight.w400),
+    ));
   }
 }
