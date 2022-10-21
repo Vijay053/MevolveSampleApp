@@ -41,8 +41,8 @@ class _MevolveCalendarState extends State<MevolveCalendar> {
                   child: Center(
                     child: Container(
                       constraints: BoxConstraints(maxWidth: 420.h),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 15, vertical: 10.0),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 16.w, vertical: 24.0.h),
                       decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
