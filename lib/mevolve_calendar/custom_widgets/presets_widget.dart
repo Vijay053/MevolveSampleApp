@@ -34,7 +34,8 @@ class PresetsWidget extends StatelessWidget {
                   builder: (context, selectedIndex, child) =>
                       (selectedIndex != null && selectedIndex == index)
                           ? ElevatedButton(
-                              onPressed: () {}, child: Text(presetItem.title))
+                              onPressed: () {},
+                              child: FittedBox(child: Text(presetItem.title)))
                           : CancelButton(
                               onPressed: () {
                                 datePickerController.selectedPreset.value =
@@ -42,7 +43,7 @@ class PresetsWidget extends StatelessWidget {
                                 datePickerController.selectDateWithDuration(
                                     presetItem.durationInDays);
                               },
-                              child: Text(presetItem.title)),
+                              child: FittedBox(child: Text(presetItem.title))),
                 );
               },
             ),

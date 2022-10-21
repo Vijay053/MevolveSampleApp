@@ -24,24 +24,25 @@ class _MevolveCalendarState extends State<MevolveCalendar> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 700),
-        child: Material(
-          color: Colors.transparent,
-          child: MultiProvider(
-            providers: [
-              Provider<DatePickerController>(
-                  create: (_) => DatePickerController()),
-            ],
-            child: Builder(
-              builder: (context) {
-                final datePickerController =
-                    Provider.of<DatePickerController>(context);
-                return FractionallySizedBox(
-                  widthFactor: 0.9,
-                  child: SingleChildScrollView(
+      child: Material(
+        color: Colors.transparent,
+        child: MultiProvider(
+          providers: [
+            Provider<DatePickerController>(
+                create: (_) => DatePickerController()),
+          ],
+          child: Builder(
+            builder: (context) {
+              final datePickerController =
+                  Provider.of<DatePickerController>(context);
+              return FractionallySizedBox(
+                widthFactor: 0.9,
+                child: SingleChildScrollView(
+                  child: Center(
                     child: Container(
-                      padding: const EdgeInsets.all(8.0),
+                      constraints: BoxConstraints(maxWidth: 420.h),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 10.0),
                       decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
@@ -52,43 +53,53 @@ class _MevolveCalendarState extends State<MevolveCalendar> {
                           PresetsWidget(widget.presets),
                           const CalenderWidget(),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                            padding: EdgeInsets.symmetric(horizontal: 4.w),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(
-                                  children: [
-                                    SvgPicture.asset('assets/svgs/calendar.svg'),
-                                    SizedBox(
-                                      width: 12.w,
+                                Flexible(
+                                  child: FittedBox(
+                                    child: Row(
+                                      children: [
+                                        SvgPicture.asset(
+                                            'assets/svgs/calendar.svg'),
+                                        SizedBox(
+                                          width: 8.w,
+                                        ),
+                                        ValueListenableBuilder(
+                                          valueListenable:
+                                              datePickerController.selectedDate,
+                                          builder: (context, value, child) =>
+                                              Text(DateFormat('d MMM y')
+                                                  .format(value)),
+                                        )
+                                      ],
                                     ),
-                                    ValueListenableBuilder(
-                                      valueListenable:
-                                          datePickerController.selectedDate,
-                                      builder: (context, value, child) => Text(
-                                          DateFormat('d MMM y').format(value)),
-                                    )
-                                  ],
+                                  ),
                                 ),
-                                Row(
-                                  children: [
-                                    CancelButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: const Text('Cancel')),
-                                    SizedBox(
-                                      width: 16.w,
+                                Flexible(
+                                  child: FittedBox(
+                                    child: Row(
+                                      children: [
+                                        CancelButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text('Cancel')),
+                                        SizedBox(
+                                          width: 12.w,
+                                        ),
+                                        ElevatedButton(
+                                            onPressed: () {
+                                              Navigator.pop(
+                                                  context,
+                                                  datePickerController
+                                                      .selectedDate.value);
+                                            },
+                                            child: const Text('Save')),
+                                      ],
                                     ),
-                                    ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.pop(
-                                              context,
-                                              datePickerController
-                                                  .selectedDate.value);
-                                        },
-                                        child: const Text('Save')),
-                                  ],
+                                  ),
                                 )
                               ],
                             ),
@@ -97,9 +108,9 @@ class _MevolveCalendarState extends State<MevolveCalendar> {
                       ),
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),

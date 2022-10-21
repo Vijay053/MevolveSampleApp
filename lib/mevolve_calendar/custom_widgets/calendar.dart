@@ -78,7 +78,7 @@ class _CalenderWidgetState extends State<CalenderWidget> {
           ],
         ),
         SizedBox(
-            height: 480.h,
+            height: 290.h,
             child: PageView.builder(
               controller: _pageController,
               onPageChanged: (index) {
@@ -94,14 +94,14 @@ class _CalenderWidgetState extends State<CalenderWidget> {
 }
 
 class _DateViewWidget extends StatelessWidget {
-  final int index;
+  final int pageIndex;
 
-  const _DateViewWidget(this.index, {Key? key}) : super(key: key);
+  const _DateViewWidget(this.pageIndex, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final datePickerController = Provider.of<DatePickerController>(context);
-    final monthToShowDate = datePickerController.getDateFromIndex(index);
+    final monthToShowDate = datePickerController.getDateFromIndex(pageIndex);
     final monthStartDate =
         DateTime(monthToShowDate.year, monthToShowDate.month, 1);
     final monthEndDate =
@@ -111,36 +111,9 @@ class _DateViewWidget extends StatelessWidget {
     final endDate = monthEndDate.add(Duration(days: 7 - monthEndDate.weekday));
     return ValueListenableBuilder(
       valueListenable: datePickerController.selectedDate,
-      builder: (context, value, child) => GridView.builder(
-        padding: const EdgeInsets.all(0),
-        itemCount: endDate.difference(startDate).inDays + 7,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 7,
-        ),
-        itemBuilder: (context, index) {
-          if (index < 7) return _getHeaderWidget(index);
-          final date = startDate.add(Duration(days: (index - 7)));
-          if ((date.isAfter(monthStartDate) ||
-                  date.isAtSameMomentAs(monthStartDate)) &&
-              (date.isBefore(monthEndDate) ||
-                  date.isAtSameMomentAs(monthEndDate))) {
-            if (date
-                .isAtSameMomentAs(datePickerController.selectedDate.value)) {
-              return _DateTextWidget(
-                date,
-                isSelected: true,
-              );
-            } else {
-              return _DateTextWidget(date);
-            }
-          } else {
-            return _DateTextWidget(
-              date,
-              isCurrentMonthDate: false,
-            );
-          }
-        },
+      builder: (context, selectedDate, child) => Column(
+        children: getItems(startDate, monthStartDate, monthEndDate,
+            selectedDate, endDate.difference(startDate).inDays + 7),
       ),
     );
   }
@@ -165,6 +138,45 @@ class _DateViewWidget extends StatelessWidget {
         return Container();
     }
   }
+
+  List<Widget> getItems(DateTime startDate, DateTime monthStartDate,
+      DateTime monthEndDate, DateTime selectedDate, int totalItems) {
+    List<Widget> widgets = [];
+    for (int row = 0; row < (totalItems / 7); row++) {
+      List<Widget> rowItems = [];
+      for (int column = 0; column < 7; column++) {
+        int index = (row * 7) + column;
+        if (index < 7) {
+          rowItems.add(_getHeaderWidget(index));
+        } else {
+          final date = startDate.add(Duration(days: (index - 7)));
+          if ((date.isAfter(monthStartDate) ||
+                  date.isAtSameMomentAs(monthStartDate)) &&
+              (date.isBefore(monthEndDate) ||
+                  date.isAtSameMomentAs(monthEndDate))) {
+            if (date.isAtSameMomentAs(selectedDate)) {
+              rowItems.add(_DateTextWidget(
+                date,
+                isSelected: true,
+              ));
+            } else {
+              rowItems.add(_DateTextWidget(date));
+            }
+          } else {
+            rowItems.add(_DateTextWidget(
+              date,
+              isCurrentMonthDate: false,
+            ));
+          }
+        }
+      }
+      widgets.add(Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: rowItems,
+      ));
+    }
+    return widgets;
+  }
 }
 
 class _DateTextWidget extends StatelessWidget {
@@ -179,29 +191,32 @@ class _DateTextWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final datePickerController = Provider.of<DatePickerController>(context);
-    return InkWell(
-      onTap: () {
-        datePickerController.selectedDate.value = dateToShow;
-      },
-      borderRadius: BorderRadius.circular(25),
-      child: isSelected
-          ? Container(
-              width: 28.w,
-              height: 28.w,
-              decoration: BoxDecoration(
-                  shape: BoxShape.circle, color: AppColors.darkBlue),
-              child: Center(
+    return Flexible(
+      child: SizedBox(
+        height: 40.h,
+        child: InkWell(
+          onTap: () {
+            datePickerController.selectedDate.value = dateToShow;
+          },
+          borderRadius: BorderRadius.circular(25),
+          child: isSelected
+              ? Container(
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle, color: AppColors.darkBlue),
+                  child: Center(
+                      child: Text(
+                    dateToShow.day.toString(),
+                    style: const TextStyle(color: Colors.white),
+                  )),
+                )
+              : Center(
                   child: Text(
-                dateToShow.day.toString(),
-                style: const TextStyle(color: Colors.white),
-              )),
-            )
-          : Center(
-              child: Text(
-              dateToShow.day.toString(),
-              style: TextStyle(
-                  color: isCurrentMonthDate ? Colors.black : Colors.grey),
-            )),
+                  dateToShow.day.toString(),
+                  style: TextStyle(
+                      color: isCurrentMonthDate ? Colors.black : Colors.grey),
+                )),
+        ),
+      ),
     );
   }
 }
@@ -213,9 +228,14 @@ class _DayNameWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-        child: Text(
-      dayName,
-    ));
+    return Flexible(
+      child: SizedBox(
+        height: 40.h,
+        child: Center(
+            child: Text(
+          dayName,
+        )),
+      ),
+    );
   }
 }
