@@ -78,7 +78,7 @@ class _CalenderWidgetState extends State<CalenderWidget> {
           ],
         ),
         SizedBox(
-            height: 340,
+            height: 480.h,
             child: PageView.builder(
               controller: _pageController,
               onPageChanged: (index) {
