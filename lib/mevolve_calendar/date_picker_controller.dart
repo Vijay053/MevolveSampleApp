@@ -34,4 +34,9 @@ class DatePickerController {
             .add(duration);
     getSelectedDatePageIndex();
   }
+
+  void updateDateSelection(DateTime date) {
+    selectedDate.value = date;
+    getSelectedDatePageIndex();
+  }
 }

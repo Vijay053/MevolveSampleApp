@@ -196,25 +196,23 @@ class _DateTextWidget extends StatelessWidget {
         height: 40.h,
         child: InkWell(
           onTap: () {
-            datePickerController.selectedDate.value = dateToShow;
+            datePickerController.updateDateSelection(dateToShow);
           },
           borderRadius: BorderRadius.circular(25),
-          child: isSelected
-              ? Container(
-                  decoration: BoxDecoration(
-                      shape: BoxShape.circle, color: AppColors.darkBlue),
-                  child: Center(
-                      child: Text(
-                    dateToShow.day.toString(),
-                    style: const TextStyle(color: Colors.white),
-                  )),
-                )
-              : Center(
-                  child: Text(
-                  dateToShow.day.toString(),
-                  style: TextStyle(
-                      color: isCurrentMonthDate ? Colors.black : Colors.grey),
-                )),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: (isSelected ? AppColors.darkBlue : Colors.transparent)),
+            child: Center(
+                child: Text(
+              dateToShow.day.toString(),
+              style: TextStyle(
+                  color: isCurrentMonthDate
+                      ? (isSelected ? Colors.white : Colors.black)
+                      : Colors.grey),
+            )),
+          ),
         ),
       ),
     );
